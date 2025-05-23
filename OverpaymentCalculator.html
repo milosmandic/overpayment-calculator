@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Repayment Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for Inter font and general aesthetics */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+            color: #374151; /* Dark gray text */
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .input-group input[type="number"],
+        .input-group input[type="date"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db; /* Light gray border */
+            border-radius: 0.5rem; /* Rounded corners */
+            background-color: #ffffff; /* White background */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* Subtle shadow */
+        }
+        .btn-primary {
+            background-color: #4f46e5; /* Indigo */
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .btn-primary:hover {
+            background-color: #4338ca; /* Darker indigo */
+        }
+        .btn-secondary {
+            background-color: #6b7280; /* Gray */
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563; /* Darker gray */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            background-color: #ffffff;
+            border-radius: 0.5rem;
+            overflow: hidden; /* Ensures rounded corners are applied */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb; /* Light gray border */
+        }
+        th {
+            background-color: #eff6ff; /* Light blue header */
+            font-weight: 600;
+            color: #1f2937; /* Darker text for header */
+        }
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .summary-box {
+            background-color: #ecfdf5; /* Light green for summary */
+            border: 1px solid #d1fae5; /* Green border */
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        .error-message {
+            color: #ef4444; /* Red for errors */
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            position: relative;
+        }
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="container bg-white p-6 rounded-lg shadow-xl">
+        <h1 class="text-3xl font-bold text-center mb-6 text-indigo-700">Loan Repayment Calculator</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div class="input-group">
+                <label for="loanAmount" class="block text-gray-700">Loan Amount ($)</label>
+                <input type="number" id="loanAmount" value="100000" min="1" class="mt-1">
+                <p id="loanAmountError" class="error-message hidden"></p>
+            </div>
+            <div class="input-group">
+                <label for="startDate" class="block text-gray-700">Loan Start Date</label>
+                <input type="date" id="startDate" class="mt-1">
+                <p id="startDateError" class="error-message hidden"></p>
+            </div>
+            <div class="input-group">
+                <label for="yearlyRate" class="block text-gray-700">Yearly Interest Rate (%)</label>
+                <input type="number" id="yearlyRate" value="5" min="0.01" step="0.01" class="mt-1">
+                <p id="yearlyRateError" class="error-message hidden"></p>
+            </div>
+            <div class="input-group">
+                <label for="monthlyPayment" class="block text-gray-700">Desired Monthly Payment ($)</label>
+                <input type="number" id="monthlyPayment" value="600" min="1" class="mt-1">
+                <p id="monthlyPaymentError" class="error-message hidden"></p>
+            </div>
+        </div>
+
+        <div class="mb-8 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <h2 class="text-xl font-semibold mb-4 text-indigo-600">Overpayments</h2>
+            <div id="overpaymentsContainer">
+                </div>
+            <button id="addOverpayment" class="btn-secondary mt-4">Add Overpayment</button>
+        </div>
+
+        <div class="text-center mb-8">
+            <button id="calculateBtn" class="btn-primary">Calculate Repayment Schedule</button>
+        </div>
+
+        <div id="summary" class="summary-box hidden">
+            <h2 class="text-xl font-semibold mb-4 text-green-700">Loan Summary</h2>
+            <p><strong>Total Interest Paid:</strong> <span id="totalInterest">$0.00</span></p>
+            <p><strong>Total Principal Paid:</strong> <span id="totalPrincipal">$0.00</span></p>
+            <p><strong>Final Repayment Date:</strong> <span id="finalDate">N/A</span></p>
+            <p><strong>Total Payments Made:</strong> <span id="totalPaymentsMade">0</span></p>
+            <p><strong>Loan Duration:</strong> <span id="loanDuration">0 months</span></p>
+        </div>
+
+        <div id="scheduleSection" class="mt-8 hidden">
+            <h2 class="text-xl font-semibold mb-4 text-indigo-600">Repayment Schedule</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Date</th>
+                            <th>Starting Balance</th>
+                            <th>Monthly Payment</th>
+                            <th>Interest Paid</th>
+                            <th>Principal Paid</th>
+                            <th>Overpayment</th>
+                            <th>Ending Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="repaymentScheduleBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="messageModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button" id="closeModalBtn">&times;</span>
+            <p id="modalMessage" class="text-lg text-center"></p>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const loanAmountInput = document.getElementById('loanAmount');
+        const startDateInput = document.getElementById('startDate');
+        const yearlyRateInput = document.getElementById('yearlyRate');
+        const monthlyPaymentInput = document.getElementById('monthlyPayment');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const addOverpaymentBtn = document.getElementById('addOverpayment');
+        const overpaymentsContainer = document.getElementById('overpaymentsContainer');
+        const summaryDiv = document.getElementById('summary');
+        const totalInterestSpan = document.getElementById('totalInterest');
+        const totalPrincipalSpan = document.getElementById('totalPrincipal');
+        const finalDateSpan = document.getElementById('finalDate');
+        const totalPaymentsMadeSpan = document.getElementById('totalPaymentsMade');
+        const loanDurationSpan = document.getElementById('loanDuration');
+        const scheduleSection = document.getElementById('scheduleSection');
+        const repaymentScheduleBody = document.getElementById('repaymentScheduleBody');
+
+        // Error message elements
+        const loanAmountError = document.getElementById('loanAmountError');
+        const startDateError = document.getElementById('startDateError');
+        const yearlyRateError = document.getElementById('yearlyRateError');
+        const monthlyPaymentError = document.getElementById('monthlyPaymentError');
+
+        // Modal elements
+        const messageModal = document.getElementById('messageModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        // Set default start date to today
+        window.onload = function() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+            const dd = String(today.getDate()).padStart(2, '0');
+            startDateInput.value = `${yyyy}-${mm}-${dd}`;
+        };
+
+        // Function to show custom modal message
+        function showMessage(message) {
+            modalMessage.textContent = message;
+            messageModal.classList.remove('hidden');
+        }
+
+        // Function to hide custom modal message
+        function hideMessage() {
+            messageModal.classList.add('hidden');
+        }
+
+        // Close modal button event listener
+        closeModalBtn.addEventListener('click', hideMessage);
+        window.addEventListener('click', (event) => {
+            if (event.target === messageModal) {
+                hideMessage();
+            }
+        });
+
+        // Function to validate inputs
+        function validateInputs() {
+            let isValid = true;
+
+            // Clear previous errors
+            loanAmountError.classList.add('hidden');
+            startDateError.classList.add('hidden');
+            yearlyRateError.classList.add('hidden');
+            monthlyPaymentError.classList.add('hidden');
+
+            const loanAmount = parseFloat(loanAmountInput.value);
+            const startDate = startDateInput.value;
+            const yearlyRate = parseFloat(yearlyRateInput.value);
+            const monthlyPayment = parseFloat(monthlyPaymentInput.value);
+
+            if (isNaN(loanAmount) || loanAmount <= 0) {
+                loanAmountError.textContent = 'Please enter a valid loan amount (> 0).';
+                loanAmountError.classList.remove('hidden');
+                isValid = false;
+            }
+            if (!startDate) {
+                startDateError.textContent = 'Please select a start date.';
+                startDateError.classList.remove('hidden');
+                isValid = false;
+            }
+            if (isNaN(yearlyRate) || yearlyRate < 0) {
+                yearlyRateError.textContent = 'Please enter a valid yearly interest rate (>= 0).';
+                yearlyRateError.classList.remove('hidden');
+                isValid = false;
+            }
+            if (isNaN(monthlyPayment) || monthlyPayment <= 0) {
+                monthlyPaymentError.textContent = 'Please enter a valid desired monthly payment (> 0).';
+                monthlyPaymentError.classList.remove('hidden');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        // Function to calculate loan repayment schedule
+        calculateBtn.addEventListener('click', () => {
+            if (!validateInputs()) {
+                return; // Stop if inputs are invalid
+            }
+
+            const loanAmount = parseFloat(loanAmountInput.value);
+            const startDate = new Date(startDateInput.value);
+            const yearlyRate = parseFloat(yearlyRateInput.value);
+            let monthlyPayment = parseFloat(monthlyPaymentInput.value);
+
+            const monthlyRate = yearlyRate / 100 / 12;
+
+            let balance = loanAmount;
+            let totalInterestPaid = 0;
+            let totalPrincipalPaid = 0;
+            let monthCount = 0;
+
+            repaymentScheduleBody.innerHTML = ''; // Clear previous schedule
+            const overpayments = getOverpayments(); // Get all entered overpayments
+
+            // Check if monthly payment is too low (less than initial interest)
+            const initialMonthlyInterest = balance * monthlyRate;
+            if (monthlyPayment <= initialMonthlyInterest && monthlyRate > 0) {
+                showMessage(`Your desired monthly payment ($${monthlyPayment.toFixed(2)}) is less than or equal to the initial monthly interest ($${initialMonthlyInterest.toFixed(2)}). The loan will never be paid off. Please increase your monthly payment.`);
+                summaryDiv.classList.add('hidden');
+                scheduleSection.classList.add('hidden');
+                return;
+            } else if (monthlyPayment <= 0 && monthlyRate > 0) {
+                 showMessage(`Your desired monthly payment ($${monthlyPayment.toFixed(2)}) is zero or negative. The loan will never be paid off. Please enter a positive monthly payment.`);
+                summaryDiv.classList.add('hidden');
+                scheduleSection.classList.add('hidden');
+                return;
+            }
+
+
+            // Loop to calculate schedule
+            while (balance > 0 && monthCount < 1200) { // Max 100 years to prevent infinite loops
+                monthCount++;
+                const currentDate = new Date(startDate);
+                currentDate.setMonth(startDate.getMonth() + monthCount - 1);
+
+                const startingBalance = balance;
+                let interestThisMonth = startingBalance * monthlyRate;
+                if (interestThisMonth < 0) interestThisMonth = 0; // Prevent negative interest if balance goes slightly negative
+
+                let principalThisMonth = monthlyPayment - interestThisMonth;
+
+                // Apply overpayments for the current month
+                let overpaymentThisMonth = 0;
+                overpayments.forEach(op => {
+                    const opDate = new Date(op.date);
+                    // Check if overpayment date matches current month and year
+                    if (opDate.getFullYear() === currentDate.getFullYear() && opDate.getMonth() === currentDate.getMonth()) {
+                        if (op.type === 'one-off') {
+                            overpaymentThisMonth += op.amount;
+                            // Mark one-off overpayment as applied so it's not applied again
+                            op.date = null; // A simple way to "consume" one-off payments
+                        } else if (op.type === 'recurring') {
+                            overpaymentThisMonth += op.amount;
+                        }
+                    }
+                });
+
+                // Adjust principal payment if it exceeds remaining balance
+                if (principalThisMonth + overpaymentThisMonth > startingBalance) {
+                    principalThisMonth = startingBalance - overpaymentThisMonth;
+                    if (principalThisMonth < 0) principalThisMonth = 0; // Ensure principal doesn't go negative
+                }
+
+
+                balance -= (principalThisMonth + overpaymentThisMonth);
+                totalInterestPaid += interestThisMonth;
+                totalPrincipalPaid += principalThisMonth;
+
+                // If balance becomes negative, adjust the last principal payment and ending balance
+                if (balance < 0) {
+                    const excessPayment = -balance;
+                    principalThisMonth += excessPayment;
+                    totalPrincipalPaid += excessPayment;
+                    balance = 0;
+                }
+
+                // Create table row
+                const row = repaymentScheduleBody.insertRow();
+                row.insertCell().textContent = monthCount;
+                row.insertCell().textContent = currentDate.toLocaleDateString();
+                row.insertCell().textContent = `$${startingBalance.toFixed(2)}`;
+                row.insertCell().textContent = `$${monthlyPayment.toFixed(2)}`;
+                row.insertCell().textContent = `$${interestThisMonth.toFixed(2)}`;
+                row.insertCell().textContent = `$${principalThisMonth.toFixed(2)}`;
+                row.insertCell().textContent = `$${overpaymentThisMonth.toFixed(2)}`;
+                row.insertCell().textContent = `$${balance.toFixed(2)}`;
+
+                if (balance <= 0) {
+                    break; // Loan paid off
+                }
+            }
+
+            // Update summary
+            totalInterestSpan.textContent = `$${totalInterestPaid.toFixed(2)}`;
+            totalPrincipalSpan.textContent = `$${(loanAmount).toFixed(2)}`; // Total principal paid should equal loan amount
+            const finalDate = new Date(startDate);
+            finalDate.setMonth(startDate.getMonth() + monthCount - 1);
+            finalDateSpan.textContent = finalDate.toLocaleDateString();
+            totalPaymentsMadeSpan.textContent = monthCount;
+            loanDurationSpan.textContent = `${monthCount} months (${(monthCount / 12).toFixed(1)} years)`;
+
+            summaryDiv.classList.remove('hidden');
+            scheduleSection.classList.remove('hidden');
+
+            if (balance > 0 && monthCount >= 1200) {
+                showMessage("The loan could not be paid off within 100 years with the given parameters. Please increase your monthly payment or add more overpayments.");
+            }
+        });
+
+        // Function to add a new overpayment input row
+        addOverpaymentBtn.addEventListener('click', () => {
+            const overpaymentRow = document.createElement('div');
+            overpaymentRow.classList.add('flex', 'flex-wrap', 'gap-4', 'mb-4', 'items-end');
+
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const defaultDate = `${yyyy}-${mm}-${dd}`;
+
+            overpaymentRow.innerHTML = `
+                <div class="input-group flex-1 min-w-[150px]">
+                    <label for="overpaymentDate" class="block text-gray-700 text-sm">Date</label>
+                    <input type="date" class="overpayment-date mt-1" value="${defaultDate}">
+                </div>
+                <div class="input-group flex-1 min-w-[150px]">
+                    <label for="overpaymentAmount" class="block text-gray-700 text-sm">Amount ($)</label>
+                    <input type="number" class="overpayment-amount mt-1" min="1" value="100">
+                </div>
+                <div class="input-group flex-1 min-w-[150px]">
+                    <label for="overpaymentType" class="block text-gray-700 text-sm">Type</label>
+                    <select class="overpayment-type mt-1 p-2 border border-gray-300 rounded-md shadow-sm w-full">
+                        <option value="one-off">One-off</option>
+                        <option value="recurring">Recurring (monthly)</option>
+                    </select>
+                </div>
+                <button class="remove-overpayment btn-secondary px-4 py-2 rounded-md">Remove</button>
+            `;
+            overpaymentsContainer.appendChild(overpaymentRow);
+
+            // Add event listener to the new remove button
+            overpaymentRow.querySelector('.remove-overpayment').addEventListener('click', (event) => {
+                event.target.closest('.flex.flex-wrap').remove();
+            });
+        });
+
+        // Function to get all overpayments from the DOM
+        function getOverpayments() {
+            const overpayments = [];
+            const overpaymentRows = overpaymentsContainer.querySelectorAll('.flex.flex-wrap');
+            overpaymentRows.forEach(row => {
+                const date = row.querySelector('.overpayment-date').value;
+                const amount = parseFloat(row.querySelector('.overpayment-amount').value);
+                const type = row.querySelector('.overpayment-type').value;
+
+                if (date && !isNaN(amount) && amount > 0) {
+                    overpayments.push({ date: date, amount: amount, type: type });
+                } else {
+                    showMessage("Please ensure all overpayment fields have a valid date and a positive amount.");
+                }
+            });
+            return overpayments;
+        }
+
+        // ... (existing JavaScript code) ...
+
+// --- STATE PERSISTENCE ---
+
+const STATE_KEY = 'loanCalculatorState'; // Key for localStorage
+
+// Function to save the current state to localStorage
+function saveState() {
+    const state = {
+        loanAmount: loanAmountInput.value,
+        startDate: startDateInput.value,
+        yearlyRate: yearlyRateInput.value,
+        monthlyPayment: monthlyPaymentInput.value,
+        overpayments: getOverpayments().map(op => ({ // Store overpayments clean for saving
+            date: op.date,
+            amount: op.amount,
+            type: op.type
+        }))
+    };
+    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+}
+
+// Function to load the state from localStorage
+function loadState() {
+    const savedState = localStorage.getItem(STATE_KEY);
+    if (savedState) {
+        const state = JSON.parse(savedState);
+
+        // Populate main inputs
+        loanAmountInput.value = state.loanAmount || '';
+        startDateInput.value = state.startDate || '';
+        yearlyRateInput.value = state.yearlyRate || '';
+        monthlyPaymentInput.value = state.monthlyPayment || '';
+
+        // Clear existing overpayments before loading
+        overpaymentsContainer.innerHTML = '';
+
+        // Recreate overpayment rows
+        if (state.overpayments && Array.isArray(state.overpayments)) {
+            state.overpayments.forEach(op => {
+                const overpaymentRow = document.createElement('div');
+                overpaymentRow.classList.add('flex', 'flex-wrap', 'gap-4', 'mb-4', 'items-end');
+
+                overpaymentRow.innerHTML = `
+                    <div class="input-group flex-1 min-w-[150px]">
+                        <label for="overpaymentDate" class="block text-gray-700 text-sm">Date</label>
+                        <input type="date" class="overpayment-date mt-1" value="${op.date}">
+                    </div>
+                    <div class="input-group flex-1 min-w-[150px]">
+                        <label for="overpaymentAmount" class="block text-gray-700 text-sm">Amount ($)</label>
+                        <input type="number" class="overpayment-amount mt-1" min="1" value="${op.amount}">
+                    </div>
+                    <div class="input-group flex-1 min-w-[150px]">
+                        <label for="overpaymentType" class="block text-gray-700 text-sm">Type</label>
+                        <select class="overpayment-type mt-1 p-2 border border-gray-300 rounded-md shadow-sm w-full">
+                            <option value="one-off" ${op.type === 'one-off' ? 'selected' : ''}>One-off</option>
+                            <option value="recurring" ${op.type === 'recurring' ? 'selected' : ''}>Recurring (monthly)</option>
+                        </select>
+                    </div>
+                    <button class="remove-overpayment btn-secondary px-4 py-2 rounded-md">Remove</button>
+                `;
+                overpaymentsContainer.appendChild(overpaymentRow);
+
+                // Add event listener to the new remove button
+                overpaymentRow.querySelector('.remove-overpayment').addEventListener('click', (event) => {
+                    event.target.closest('.flex.flex-wrap').remove();
+                    saveState(); // Save state after removing an overpayment
+                });
+            });
+        }
+    }
+}
+
+// --- Event Listeners and Initial Load ---
+
+// Call loadState on page load
+window.onload = function() {
+    loadState(); // Load saved state first
+    // If no state or no date was saved, set today's date as default
+    if (!startDateInput.value) {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        startDateInput.value = `${yyyy}-${mm}-${dd}`;
+    }
+    // Set up event listeners to save state on input changes
+    loanAmountInput.addEventListener('input', saveState);
+    startDateInput.addEventListener('change', saveState); // Use change for date input
+    yearlyRateInput.addEventListener('input', saveState);
+    monthlyPaymentInput.addEventListener('input', saveState);
+
+    // Initial save of default/loaded state
+    saveState();
+};
+
+
+// Modify addOverpaymentBtn click listener to also save state
+addOverpaymentBtn.addEventListener('click', () => {
+    // ... (existing code to create overpaymentRow) ...
+    const overpaymentRow = document.createElement('div');
+    overpaymentRow.classList.add('flex', 'flex-wrap', 'gap-4', 'mb-4', 'items-end');
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const defaultDate = `${yyyy}-${mm}-${dd}`;
+
+    overpaymentRow.innerHTML = `
+        <div class="input-group flex-1 min-w-[150px]">
+            <label for="overpaymentDate" class="block text-gray-700 text-sm">Date</label>
+            <input type="date" class="overpayment-date mt-1" value="${defaultDate}">
+        </div>
+        <div class="input-group flex-1 min-w-[150px]">
+            <label for="overpaymentAmount" class="block text-gray-700 text-sm">Amount ($)</label>
+            <input type="number" class="overpayment-amount mt-1" min="1" value="100">
+        </div>
+        <div class="input-group flex-1 min-w-[150px]">
+            <label for="overpaymentType" class="block text-gray-700 text-sm">Type</label>
+            <select class="overpayment-type mt-1 p-2 border border-gray-300 rounded-md shadow-sm w-full">
+                <option value="one-off">One-off</option>
+                <option value="recurring">Recurring (monthly)</option>
+            </select>
+        </div>
+        <button class="remove-overpayment btn-secondary px-4 py-2 rounded-md">Remove</button>
+    `;
+    overpaymentsContainer.appendChild(overpaymentRow);
+
+    // Add event listener to the new remove button
+    overpaymentRow.querySelector('.remove-overpayment').addEventListener('click', (event) => {
+        event.target.closest('.flex.flex-wrap').remove();
+        saveState(); // Save state after removing an overpayment
+    });
+
+    // Add event listeners for new overpayment inputs to save state
+    overpaymentRow.querySelector('.overpayment-date').addEventListener('change', saveState);
+    overpaymentRow.querySelector('.overpayment-amount').addEventListener('input', saveState);
+    overpaymentRow.querySelector('.overpayment-type').addEventListener('change', saveState);
+
+    saveState(); // Save state immediately after adding a new overpayment row
+});
+
+// Modify calculateBtn click listener to save state before calculating
+calculateBtn.addEventListener('click', () => {
+    saveState(); // Save current state before calculation
+    // ... (rest of your calculateLoan function logic) ...
+});
+
+// Original getOverpayments function, ensure it's still available and correct
+// (No changes needed to this function, but it's crucial for saveState and loadState)
+function getOverpayments() {
+    const overpayments = [];
+    const overpaymentRows = overpaymentsContainer.querySelectorAll('.flex.flex-wrap');
+    overpaymentRows.forEach(row => {
+        const date = row.querySelector('.overpayment-date').value;
+        const amount = parseFloat(row.querySelector('.overpayment-amount').value);
+        const type = row.querySelector('.overpayment-type').value;
+
+        // Only include valid overpayments in the saved state
+        if (date && !isNaN(amount) && amount > 0) {
+            overpayments.push({ date: date, amount: amount, type: type });
+        }
+        // No need for a modal here, it's just for state saving logic.
+        // Validation for calculations should happen in validateInputs().
+    });
+    return overpayments;
+}
+    </script>
+</body>
+</html>
