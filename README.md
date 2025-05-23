@@ -1,2 +1,2 @@
 # overpayment-calculator
-Overpayment calculator
+Loan Repayment Calculator
