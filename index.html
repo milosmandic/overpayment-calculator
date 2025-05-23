@@ -135,25 +135,25 @@
     <div class="container bg-white p-6 rounded-lg shadow-xl">
         <h1 class="text-3xl font-bold text-center mb-6 text-indigo-700">Loan Repayment Calculator</h1>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" >
             <div class="input-group">
                 <label for="loanAmount" class="block text-gray-700">Loan Amount (€)</label>
-                <input type="number" id="loanAmount" value="100000" min="1" class="mt-1">
+                <input type="number" id="loanAmount" value="24200" min="1" class="mt-1">
                 <p id="loanAmountError" class="error-message hidden"></p>
             </div>
             <div class="input-group">
                 <label for="startDate" class="block text-gray-700">Loan Start Date</label>
-                <input type="date" id="startDate" class="mt-1">
+                <input type="date" id="startDate" value="2025-04-01" class="mt-1">
                 <p id="startDateError" class="error-message hidden"></p>
             </div>
             <div class="input-group">
                 <label for="yearlyRate" class="block text-gray-700">Yearly Interest Rate (%)</label>
-                <input type="number" id="yearlyRate" value="5" min="0.01" step="0.01" class="mt-1">
+                <input type="number" id="yearlyRate" value="4.5" min="0.01" step="0.01" class="mt-1">
                 <p id="yearlyRateError" class="error-message hidden"></p>
             </div>
             <div class="input-group">
                 <label for="monthlyPayment" class="block text-gray-700">Desired Monthly Payment (€)</label>
-                <input type="number" id="monthlyPayment" value="600" min="1" class="mt-1">
+                <input type="number" id="monthlyPayment" value="1000" min="1" class="mt-1">
                 <p id="monthlyPaymentError" class="error-message hidden"></p>
             </div>
         </div>
