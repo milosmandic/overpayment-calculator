@@ -137,7 +137,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <div class="input-group">
-                <label for="loanAmount" class="block text-gray-700">Loan Amount ($)</label>
+                <label for="loanAmount" class="block text-gray-700">Loan Amount (€)</label>
                 <input type="number" id="loanAmount" value="100000" min="1" class="mt-1">
                 <p id="loanAmountError" class="error-message hidden"></p>
             </div>
@@ -152,7 +152,7 @@
                 <p id="yearlyRateError" class="error-message hidden"></p>
             </div>
             <div class="input-group">
-                <label for="monthlyPayment" class="block text-gray-700">Desired Monthly Payment ($)</label>
+                <label for="monthlyPayment" class="block text-gray-700">Desired Monthly Payment (€)</label>
                 <input type="number" id="monthlyPayment" value="600" min="1" class="mt-1">
                 <p id="monthlyPaymentError" class="error-message hidden"></p>
             </div>
@@ -171,8 +171,8 @@
 
         <div id="summary" class="summary-box hidden">
             <h2 class="text-xl font-semibold mb-4 text-green-700">Loan Summary</h2>
-            <p><strong>Total Interest Paid:</strong> <span id="totalInterest">$0.00</span></p>
-            <p><strong>Total Principal Paid:</strong> <span id="totalPrincipal">$0.00</span></p>
+            <p><strong>Total Interest Paid:</strong> <span id="totalInterest">€0.00</span></p>
+            <p><strong>Total Principal Paid:</strong> <span id="totalPrincipal">€0.00</span></p>
             <p><strong>Final Repayment Date:</strong> <span id="finalDate">N/A</span></p>
             <p><strong>Total Payments Made:</strong> <span id="totalPaymentsMade">0</span></p>
             <p><strong>Loan Duration:</strong> <span id="loanDuration">0 months</span></p>
@@ -328,12 +328,12 @@
             // Check if monthly payment is too low (less than initial interest)
             const initialMonthlyInterest = balance * monthlyRate;
             if (monthlyPayment <= initialMonthlyInterest && monthlyRate > 0) {
-                showMessage(`Your desired monthly payment ($${monthlyPayment.toFixed(2)}) is less than or equal to the initial monthly interest ($${initialMonthlyInterest.toFixed(2)}). The loan will never be paid off. Please increase your monthly payment.`);
+                showMessage(`Your desired monthly payment (€${monthlyPayment.toFixed(2)}) is less than or equal to the initial monthly interest (€${initialMonthlyInterest.toFixed(2)}). The loan will never be paid off. Please increase your monthly payment.`);
                 summaryDiv.classList.add('hidden');
                 scheduleSection.classList.add('hidden');
                 return;
             } else if (monthlyPayment <= 0 && monthlyRate > 0) {
-                 showMessage(`Your desired monthly payment ($${monthlyPayment.toFixed(2)}) is zero or negative. The loan will never be paid off. Please enter a positive monthly payment.`);
+                 showMessage(`Your desired monthly payment (€${monthlyPayment.toFixed(2)}) is zero or negative. The loan will never be paid off. Please enter a positive monthly payment.`);
                 summaryDiv.classList.add('hidden');
                 scheduleSection.classList.add('hidden');
                 return;
@@ -391,12 +391,12 @@
                 const row = repaymentScheduleBody.insertRow();
                 row.insertCell().textContent = monthCount;
                 row.insertCell().textContent = currentDate.toLocaleDateString();
-                row.insertCell().textContent = `$${startingBalance.toFixed(2)}`;
-                row.insertCell().textContent = `$${monthlyPayment.toFixed(2)}`;
-                row.insertCell().textContent = `$${interestThisMonth.toFixed(2)}`;
-                row.insertCell().textContent = `$${principalThisMonth.toFixed(2)}`;
-                row.insertCell().textContent = `$${overpaymentThisMonth.toFixed(2)}`;
-                row.insertCell().textContent = `$${balance.toFixed(2)}`;
+                row.insertCell().textContent = `€${startingBalance.toFixed(2)}`;
+                row.insertCell().textContent = `€${monthlyPayment.toFixed(2)}`;
+                row.insertCell().textContent = `€${interestThisMonth.toFixed(2)}`;
+                row.insertCell().textContent = `€${principalThisMonth.toFixed(2)}`;
+                row.insertCell().textContent = `€${overpaymentThisMonth.toFixed(2)}`;
+                row.insertCell().textContent = `€${balance.toFixed(2)}`;
 
                 if (balance <= 0) {
                     break; // Loan paid off
@@ -404,8 +404,8 @@
             }
 
             // Update summary
-            totalInterestSpan.textContent = `$${totalInterestPaid.toFixed(2)}`;
-            totalPrincipalSpan.textContent = `$${(loanAmount).toFixed(2)}`; // Total principal paid should equal loan amount
+            totalInterestSpan.textContent = `€${totalInterestPaid.toFixed(2)}`;
+            totalPrincipalSpan.textContent = `€${(loanAmount).toFixed(2)}`; // Total principal paid should equal loan amount
             const finalDate = new Date(startDate);
             finalDate.setMonth(startDate.getMonth() + monthCount - 1);
             finalDateSpan.textContent = finalDate.toLocaleDateString();
@@ -437,7 +437,7 @@
                     <input type="date" class="overpayment-date mt-1" value="${defaultDate}">
                 </div>
                 <div class="input-group flex-1 min-w-[150px]">
-                    <label for="overpaymentAmount" class="block text-gray-700 text-sm">Amount ($)</label>
+                    <label for="overpaymentAmount" class="block text-gray-700 text-sm">Amount (€)</label>
                     <input type="number" class="overpayment-amount mt-1" min="1" value="100">
                 </div>
                 <div class="input-group flex-1 min-w-[150px]">
@@ -475,174 +475,154 @@
             return overpayments;
         }
 
-        // ... (existing JavaScript code) ...
+        // --- STATE PERSISTENCE ---
 
-// --- STATE PERSISTENCE ---
+        const STATE_KEY = 'loanCalculatorState'; // Key for localStorage
 
-const STATE_KEY = 'loanCalculatorState'; // Key for localStorage
+        // Function to save the current state to localStorage
+        function saveState() {
+            const state = {
+                loanAmount: loanAmountInput.value,
+                startDate: startDateInput.value,
+                yearlyRate: yearlyRateInput.value,
+                monthlyPayment: monthlyPaymentInput.value,
+                overpayments: getOverpayments().map(op => ({ // Store overpayments clean for saving
+                    date: op.date,
+                    amount: op.amount,
+                    type: op.type
+                }))
+            };
+            localStorage.setItem(STATE_KEY, JSON.stringify(state));
+        }
 
-// Function to save the current state to localStorage
-function saveState() {
-    const state = {
-        loanAmount: loanAmountInput.value,
-        startDate: startDateInput.value,
-        yearlyRate: yearlyRateInput.value,
-        monthlyPayment: monthlyPaymentInput.value,
-        overpayments: getOverpayments().map(op => ({ // Store overpayments clean for saving
-            date: op.date,
-            amount: op.amount,
-            type: op.type
-        }))
-    };
-    localStorage.setItem(STATE_KEY, JSON.stringify(state));
-}
+        // Function to load the state from localStorage
+        function loadState() {
+            const savedState = localStorage.getItem(STATE_KEY);
+            if (savedState) {
+                const state = JSON.parse(savedState);
 
-// Function to load the state from localStorage
-function loadState() {
-    const savedState = localStorage.getItem(STATE_KEY);
-    if (savedState) {
-        const state = JSON.parse(savedState);
+                // Populate main inputs
+                loanAmountInput.value = state.loanAmount || '';
+                startDateInput.value = state.startDate || '';
+                yearlyRateInput.value = state.yearlyRate || '';
+                monthlyPaymentInput.value = state.monthlyPayment || '';
 
-        // Populate main inputs
-        loanAmountInput.value = state.loanAmount || '';
-        startDateInput.value = state.startDate || '';
-        yearlyRateInput.value = state.yearlyRate || '';
-        monthlyPaymentInput.value = state.monthlyPayment || '';
+                // Clear existing overpayments before loading
+                overpaymentsContainer.innerHTML = '';
 
-        // Clear existing overpayments before loading
-        overpaymentsContainer.innerHTML = '';
+                // Recreate overpayment rows
+                if (state.overpayments && Array.isArray(state.overpayments)) {
+                    state.overpayments.forEach(op => {
+                        const overpaymentRow = document.createElement('div');
+                        overpaymentRow.classList.add('flex', 'flex-wrap', 'gap-4', 'mb-4', 'items-end');
 
-        // Recreate overpayment rows
-        if (state.overpayments && Array.isArray(state.overpayments)) {
-            state.overpayments.forEach(op => {
-                const overpaymentRow = document.createElement('div');
-                overpaymentRow.classList.add('flex', 'flex-wrap', 'gap-4', 'mb-4', 'items-end');
+                        overpaymentRow.innerHTML = `
+                            <div class="input-group flex-1 min-w-[150px]">
+                                <label for="overpaymentDate" class="block text-gray-700 text-sm">Date</label>
+                                <input type="date" class="overpayment-date mt-1" value="${op.date}">
+                            </div>
+                            <div class="input-group flex-1 min-w-[150px]">
+                                <label for="overpaymentAmount" class="block text-gray-700 text-sm">Amount (€)</label>
+                                <input type="number" class="overpayment-amount mt-1" min="1" value="${op.amount}">
+                            </div>
+                            <div class="input-group flex-1 min-w-[150px]">
+                                <label for="overpaymentType" class="block text-gray-700 text-sm">Type</label>
+                                <select class="overpayment-type mt-1 p-2 border border-gray-300 rounded-md shadow-sm w-full">
+                                    <option value="one-off" ${op.type === 'one-off' ? 'selected' : ''}>One-off</option>
+                                    <option value="recurring" ${op.type === 'recurring' ? 'selected' : ''}>Recurring (monthly)</option>
+                                </select>
+                            </div>
+                            <button class="remove-overpayment btn-secondary px-4 py-2 rounded-md">Remove</button>
+                        `;
+                        overpaymentsContainer.appendChild(overpaymentRow);
 
-                overpaymentRow.innerHTML = `
-                    <div class="input-group flex-1 min-w-[150px]">
-                        <label for="overpaymentDate" class="block text-gray-700 text-sm">Date</label>
-                        <input type="date" class="overpayment-date mt-1" value="${op.date}">
-                    </div>
-                    <div class="input-group flex-1 min-w-[150px]">
-                        <label for="overpaymentAmount" class="block text-gray-700 text-sm">Amount ($)</label>
-                        <input type="number" class="overpayment-amount mt-1" min="1" value="${op.amount}">
-                    </div>
-                    <div class="input-group flex-1 min-w-[150px]">
-                        <label for="overpaymentType" class="block text-gray-700 text-sm">Type</label>
-                        <select class="overpayment-type mt-1 p-2 border border-gray-300 rounded-md shadow-sm w-full">
-                            <option value="one-off" ${op.type === 'one-off' ? 'selected' : ''}>One-off</option>
-                            <option value="recurring" ${op.type === 'recurring' ? 'selected' : ''}>Recurring (monthly)</option>
-                        </select>
-                    </div>
-                    <button class="remove-overpayment btn-secondary px-4 py-2 rounded-md">Remove</button>
-                `;
-                overpaymentsContainer.appendChild(overpaymentRow);
+                        // Add event listener to the new remove button
+                        overpaymentRow.querySelector('.remove-overpayment').addEventListener('click', (event) => {
+                            event.target.closest('.flex.flex-wrap').remove();
+                            saveState(); // Save state after removing an overpayment
+                        });
 
-                // Add event listener to the new remove button
-                overpaymentRow.querySelector('.remove-overpayment').addEventListener('click', (event) => {
-                    event.target.closest('.flex.flex-wrap').remove();
-                    saveState(); // Save state after removing an overpayment
-                });
+                        // Add event listeners for new overpayment inputs to save state
+                        overpaymentRow.querySelector('.overpayment-date').addEventListener('change', saveState);
+                        overpaymentRow.querySelector('.overpayment-amount').addEventListener('input', saveState);
+                        overpaymentRow.querySelector('.overpayment-type').addEventListener('change', saveState);
+                    });
+                }
+            }
+        }
+
+        // Call loadState on page load
+        window.onload = function() {
+            loadState(); // Load saved state first
+            // If no state or no date was saved, set today's date as default
+            if (!startDateInput.value) {
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                startDateInput.value = `${yyyy}-${mm}-${dd}`;
+            }
+            // Set up event listeners to save state on input changes
+            loanAmountInput.addEventListener('input', saveState);
+            startDateInput.addEventListener('change', saveState); // Use change for date input
+            yearlyRateInput.addEventListener('input', saveState);
+            monthlyPaymentInput.addEventListener('input', saveState);
+
+            // Initial save of default/loaded state
+            saveState();
+        };
+
+
+        // Modify addOverpaymentBtn click listener to also save state
+        addOverpaymentBtn.addEventListener('click', () => {
+            const overpaymentRow = document.createElement('div');
+            overpaymentRow.classList.add('flex', 'flex-wrap', 'gap-4', 'mb-4', 'items-end');
+
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const defaultDate = `${yyyy}-${mm}-${dd}`;
+
+            overpaymentRow.innerHTML = `
+                <div class="input-group flex-1 min-w-[150px]">
+                    <label for="overpaymentDate" class="block text-gray-700 text-sm">Date</label>
+                    <input type="date" class="overpayment-date mt-1" value="${defaultDate}">
+                </div>
+                <div class="input-group flex-1 min-w-[150px]">
+                    <label for="overpaymentAmount" class="block text-gray-700 text-sm">Amount (€)</label>
+                    <input type="number" class="overpayment-amount mt-1" min="1" value="100">
+                </div>
+                <div class="input-group flex-1 min-w-[150px]">
+                    <label for="overpaymentType" class="block text-gray-700 text-sm">Type</label>
+                    <select class="overpayment-type mt-1 p-2 border border-gray-300 rounded-md shadow-sm w-full">
+                        <option value="one-off">One-off</option>
+                        <option value="recurring">Recurring (monthly)</option>
+                    </select>
+                </div>
+                <button class="remove-overpayment btn-secondary px-4 py-2 rounded-md">Remove</button>
+            `;
+            overpaymentsContainer.appendChild(overpaymentRow);
+
+            // Add event listener to the new remove button
+            overpaymentRow.querySelector('.remove-overpayment').addEventListener('click', (event) => {
+                event.target.closest('.flex.flex-wrap').remove();
+                saveState(); // Save state after removing an overpayment
             });
-        }
-    }
-}
 
-// --- Event Listeners and Initial Load ---
+            // Add event listeners for new overpayment inputs to save state
+            overpaymentRow.querySelector('.overpayment-date').addEventListener('change', saveState);
+            overpaymentRow.querySelector('.overpayment-amount').addEventListener('input', saveState);
+            overpaymentRow.querySelector('.overpayment-type').addEventListener('change', saveState);
 
-// Call loadState on page load
-window.onload = function() {
-    loadState(); // Load saved state first
-    // If no state or no date was saved, set today's date as default
-    if (!startDateInput.value) {
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        startDateInput.value = `${yyyy}-${mm}-${dd}`;
-    }
-    // Set up event listeners to save state on input changes
-    loanAmountInput.addEventListener('input', saveState);
-    startDateInput.addEventListener('change', saveState); // Use change for date input
-    yearlyRateInput.addEventListener('input', saveState);
-    monthlyPaymentInput.addEventListener('input', saveState);
+            saveState(); // Save state immediately after adding a new overpayment row
+        });
 
-    // Initial save of default/loaded state
-    saveState();
-};
-
-
-// Modify addOverpaymentBtn click listener to also save state
-addOverpaymentBtn.addEventListener('click', () => {
-    // ... (existing code to create overpaymentRow) ...
-    const overpaymentRow = document.createElement('div');
-    overpaymentRow.classList.add('flex', 'flex-wrap', 'gap-4', 'mb-4', 'items-end');
-
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const defaultDate = `${yyyy}-${mm}-${dd}`;
-
-    overpaymentRow.innerHTML = `
-        <div class="input-group flex-1 min-w-[150px]">
-            <label for="overpaymentDate" class="block text-gray-700 text-sm">Date</label>
-            <input type="date" class="overpayment-date mt-1" value="${defaultDate}">
-        </div>
-        <div class="input-group flex-1 min-w-[150px]">
-            <label for="overpaymentAmount" class="block text-gray-700 text-sm">Amount ($)</label>
-            <input type="number" class="overpayment-amount mt-1" min="1" value="100">
-        </div>
-        <div class="input-group flex-1 min-w-[150px]">
-            <label for="overpaymentType" class="block text-gray-700 text-sm">Type</label>
-            <select class="overpayment-type mt-1 p-2 border border-gray-300 rounded-md shadow-sm w-full">
-                <option value="one-off">One-off</option>
-                <option value="recurring">Recurring (monthly)</option>
-            </select>
-        </div>
-        <button class="remove-overpayment btn-secondary px-4 py-2 rounded-md">Remove</button>
-    `;
-    overpaymentsContainer.appendChild(overpaymentRow);
-
-    // Add event listener to the new remove button
-    overpaymentRow.querySelector('.remove-overpayment').addEventListener('click', (event) => {
-        event.target.closest('.flex.flex-wrap').remove();
-        saveState(); // Save state after removing an overpayment
-    });
-
-    // Add event listeners for new overpayment inputs to save state
-    overpaymentRow.querySelector('.overpayment-date').addEventListener('change', saveState);
-    overpaymentRow.querySelector('.overpayment-amount').addEventListener('input', saveState);
-    overpaymentRow.querySelector('.overpayment-type').addEventListener('change', saveState);
-
-    saveState(); // Save state immediately after adding a new overpayment row
-});
-
-// Modify calculateBtn click listener to save state before calculating
-calculateBtn.addEventListener('click', () => {
-    saveState(); // Save current state before calculation
-    // ... (rest of your calculateLoan function logic) ...
-});
-
-// Original getOverpayments function, ensure it's still available and correct
-// (No changes needed to this function, but it's crucial for saveState and loadState)
-function getOverpayments() {
-    const overpayments = [];
-    const overpaymentRows = overpaymentsContainer.querySelectorAll('.flex.flex-wrap');
-    overpaymentRows.forEach(row => {
-        const date = row.querySelector('.overpayment-date').value;
-        const amount = parseFloat(row.querySelector('.overpayment-amount').value);
-        const type = row.querySelector('.overpayment-type').value;
-
-        // Only include valid overpayments in the saved state
-        if (date && !isNaN(amount) && amount > 0) {
-            overpayments.push({ date: date, amount: amount, type: type });
-        }
-        // No need for a modal here, it's just for state saving logic.
-        // Validation for calculations should happen in validateInputs().
-    });
-    return overpayments;
-}
+        // Modify calculateBtn click listener to save state before calculating
+        calculateBtn.addEventListener('click', () => {
+            saveState(); // Save current state before calculation
+            // ... (rest of your calculateLoan function logic) ...
+        });
     </script>
 </body>
 </html>
